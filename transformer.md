@@ -13,7 +13,7 @@ Transformer bao gồm hai thành phần chính: **Bộ mã hóa (Encoder)** và 
 
 <figure>
     <p align="center">
-    <img title="a title" alt="Alt text" src="rpimg/transformer.svg">
+    <img title="a title" alt="Alt text" src="rpimg/transformers.svg">
     </p>
     <figcaption style="text-align: center;"><em>Kiến trúc transformer</em></figcaption>
 </figure>
