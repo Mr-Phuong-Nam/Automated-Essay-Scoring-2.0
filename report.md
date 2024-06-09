@@ -176,7 +176,7 @@ Bạn có thể tìm hiểu thêm về Transformer tại bài báo "Attention Is
 ### 2.3 Cấu trúc pipeline
 Công cụ Pipeline: `pipeline()` là công cụ cơ bản nhất trong thư viện Transformers, kết nối mô hình với các bước tiền xử lý và hậu xử lý cần thiết, cho phép nhập trực tiếp văn bản và nhận câu trả lời có ý nghĩa.
 Ta có ví dụ sau:
-```
+```python
 from transformers import pipeline
 
 classifier = pipeline("sentiment-analysis")
@@ -189,7 +189,7 @@ classifier(
 ```
 
 Sau khi thực thi đoạn mã trên ta có kết quả sau:
-```
+```python
 [{'label': 'POSITIVE', 'score': 0.9598047137260437},
  {'label': 'NEGATIVE', 'score': 0.9994558095932007}]
 ```
@@ -203,7 +203,7 @@ Quy trình này kết hợp ba bước: *tiền xử lý (preprocessing), truy�
 Ta sẽ đi qua từng quá trình trên
 
 **Tiền xử lý (Preprocessing):** Bước này bao gồm việc làm sạch và chuẩn hóa dữ liệu, như loại bỏ nhiễu, chuẩn hóa chính tả, và phân tách từ (tokenization). Mục tiêu là chuẩn bị dữ liệu đầu vào để dễ dàng xử lý hơn.
-```
+```python
 from transformers import AutoTokenizer
 
 checkpoint = "distilbert-base-uncased-finetuned-sst-2-english"
@@ -219,7 +219,7 @@ print(inputs)
 *Đoạn code trên thực hiện quá trình xử lí token hóa cho tập dữ liệu đầu vào, với tokenizer từ một mô hình đã được huấn luyện sẵn (pretrained model).*
 
 Kết quả đầu ra lúc này sẽ là:
-```
+```python
 {
     'input_ids': tensor([
         [  101,  1045,  1005,  2310,  2042,  3403,  2005,  1037, 17662, 12172, 2607,  2026,  2878,  2166,  1012,   102],
@@ -236,7 +236,7 @@ Kết quả là một từ điển chứa hai khóa, `input_ids` và `attention_
 
 **Mô hình hóa (Modeling):** Trong bước này, dữ liệu đã qua tiền xử lý được đưa qua một hoặc nhiều mô hình học máy để rút trích thông tin hoặc tạo ra ngôn ngữ. Các mô hình có thể bao gồm mô hình chỉ mã hóa, chỉ giải mã, hoặc cả mã hóa và giải mã.
 
-```
+```python
 from transformers import AutoModelForSequenceClassification
 
 checkpoint = "distilbert-base-uncased-finetuned-sst-2-english"
@@ -247,32 +247,32 @@ outputs = model(**inputs)
 
 **Hậu xử lý (Postprocessing):** Sau khi mô hình đã xử lý dữ liệu, bước hậu xử lý sẽ chuyển kết quả của mô hình thành dạng cuối cùng mà người dùng có thể hiểu được. Điều này có thể bao gồm việc chuyển đổi kết quả thành văn bản tự nhiên hoặc thực hiện các điều chỉnh cuối cùng trên kết quả.
 Sau khi đưa dữ liệu vào mô hình ở trên, ta có dự đoán sau:
-```
+```python
 print(outputs.logits)
 ```
-```
+```python
 tensor([[-1.5607,  1.6123],
         [ 4.1692, -3.3464]], grad_fn=<AddmmBackward>)
 ```
 *Đây là các giá trị *logits* mà mô hình đã dự đoán từ dữ liệu đầu vào, với mỗi vector tương ứng với một chuỗi từ dữ liệu input.*
 
 Vì *logits* chỉ là kết quả thô, chưa được chuẩn hóa, do đó ta phải sử dụng các kĩ thuật khác để đưa nó trở thành kết quả cuối cùng. Trong đoạn code trên, ta sẽ đưa *logits* qua một lớp hàm *Softmax* để phân tích quan điểm (sentiment analysis): 
-```
+```python
 import torch
 
 predictions = torch.nn.functional.softmax(outputs.logits, dim=-1)
 print(predictions)
 ```
-```
+```python
 tensor([[4.0195e-02, 9.5980e-01],
         [9.9946e-01, 5.4418e-04]], grad_fn=<SoftmaxBackward>)
 ```
 *Bây giờ chúng ta có thể thấy rằng mô hình đã dự đoán [0.0402, 0.9598] cho câu đầu tiên và [0.9995, 0.0005] cho câu thứ hai. Đó là điểm số xác suất mong muốn.*
 Để có được các nhãn tương ứng với mỗi vị trí, chúng ta có thể kiểm tra thuộc tính `id2label` của cấu hình model:
-```
+```python
 model.config.id2label
 ```
-```
+```python
 {0: 'NEGATIVE', 1: 'POSITIVE'}
 ```
 Bây giờ chúng ta có thể kết luận rằng mô hình dự đoán như sau:
