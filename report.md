@@ -49,7 +49,7 @@ Gồm 3 bộ dữ liệu
       <figcaption style="text-align: center;"><em>Phân bố các bài luận theo điểm số</em></figcaption>
   </figure>
 
-##### Nhận xét:
+**Nhận xét:**
 - Phần lớn bài luận nhận được điểm số 3 (6280 bài), cho thấy đây là mức điểm phổ biến nhất.
 Điểm số 2 và 4 cũng có số lượng bài luận khá cao, lần lượt là 4723 và 3926 bài.
 - Điểm số 1 và 5 có số lượng bài luận ít hơn đáng kể, lần lượt là 1252 và 970 bài.
@@ -70,7 +70,7 @@ Gồm 3 bộ dữ liệu
       <figcaption style="text-align: center;"><em>Phân bố score theo độ dài văn bản</em></figcaption>
  </figure>
 
-##### Nhận xét chung:
+**Nhận xét chung:**
   - Những bài luận có độ dài càng lớn thì số điểm thấp càng ít.
   - Ở các bài luận (0-500] từ chỉ có 0.00697% được điểm 6 dù số lượng bài luận trong khoảng này rất lớn, trong khi (1000-1500] từ thì chiếm 27% điểm 6.
   - Hầu như các luận trên 1000 từ không có điểm 1.
@@ -86,7 +86,7 @@ Gồm 3 bộ dữ liệu
       <figcaption style="text-align: center;"><em>Phân bố số từ vựng sai chính tả</em></figcaption>
 </figure>
 
-##### Nhận xét:
+**Nhận xét:**
   - Số lượng bài luận mắc lỗi từ 0 - 20 từ là nhiều nhất và tập trung ở mức điểm 2 - 4.
   - Hầu như các bài luận được điểm càng cao thì càng mắc ít lỗi chính tả.
   - Các điểm ngoại lai (các bài mắc rất nhiều lỗi - khoảng trên 60 lỗi) có điểm từ 1 - 4.
@@ -97,7 +97,7 @@ Gồm 3 bộ dữ liệu
       <figcaption style="text-align: center;"><em>WordCloud</em></figcaption>
  </figure>
 
-##### Nhận xét
+**Nhận xét:**
 - Có thể thấy chủ đề của các bài luận xoay quanh driverless car, Electoral College, Seagoing Cowboy, Coding System, Face Mar,...
 - Ta xem xét bigram của các bài luận có score là 6 và 1 để so sánh.
 <figure>
@@ -105,7 +105,7 @@ Gồm 3 bộ dữ liệu
       <figcaption style="text-align: center;"><em>Top BiGrams</em></figcaption>
  </figure>
 
-##### Nhận xét:
+**Nhận xét:**
 - Những bigrams được sử dụng ở cả hai mức điểm là electoral college, popular vote và là những từ chủ đề như đã phân tích Wordcloud.
 - Hầu như các bigrams nằm trong mức điểm 6 lại rất hiếm khi xuất hiện trong mức điểm 1, có thể vì thế nên các bài luận có score 1 không có tính thống nhất với chủ đề, do đó có số điểm thấp hơn.
 #### Phân tích cảm xúc (Sentiment Analysis)
@@ -114,7 +114,7 @@ Gồm 3 bộ dữ liệu
       <figcaption style="text-align: center;"><em>Sentiment Polarity</em></figcaption>
  </figure>
 
-##### Nhận xét:
+**Nhận xét:**
 - Nếu xét các mức sentiment <0: Thì nhận thấy các bài essay điểm càng cao thì có sentiment càng cao.
 - Ngược lại ở các mức sentiment >0: Hầu như các bài essay điểm càng thấp thì có sentiment càng cao.
 => Càng bài essay điểm càng cao có miền sentiment càng thấp.
@@ -125,14 +125,14 @@ Gồm 3 bộ dữ liệu
       <figcaption style="text-align: center;"><em>Histogram chỉ số simple TTR </em></figcaption>
 </figure>
 
-##### Nhận xét:
+**Nhận xét:**
 - Đa phần các bài essay có chỉ số đa dạng từ vựng (Simple TTR) phân bố nhiều ở khoảng (0.4-0.5) .Ta hãy cùng xem mối tương quan giữa chúng với điểm số của các bài essay.
 <figure>
       <img title="a title" alt="Alt text" src="rpimg/ttr_score.svg">
       <figcaption style="text-align: center;"><em>Mối quan hệ chỉ số simple ttr và score</em></figcaption>
 </figure>
 
-##### Nhận xét:
+**Nhận xét:**
 - Không có mối quan hệ tỉ lệ thuận giữa điểm số và độ đa dạng từ vựng .Trong trường hợp datasets này có thể có cách chấm điểm không dựa vào độ đa dạng từ hoặc có thể các bài có nhiều từ nhưng tác giả lại sử dụng sai ngữ cảnh dẫn đến điểm có thể sẽ không cao.
 - Tuy nhiên để đạt điểm cao (từ điểm 5 trở lên) thì hầu như các bài essay phải có chỉ số `Simple TTR` từ điểm 0.25 trở lên.
 
