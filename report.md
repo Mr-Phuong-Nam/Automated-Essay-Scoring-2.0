@@ -5,38 +5,31 @@
 ### 2.3. Cấu trúc pipelines (chapter  2)	
 ## 3. Fine tuning mô hình DeBERTaV3
 ### 3.1. Giới thiệu mô hình 
-#### DeBERTaV3: Cải thiện DeBERTa bằng cách sử dụng Tiền huấn luyện kiểu ELECTRA với Chia sẻ Nhúng Gradient-Disentangled
+- Mục tiêu của bài toán là từ bài luận của học sinh, dự đoán điểm số từ 1 đến 6. Đây chính là một bài toán encoding điển hình. Các mô hình điển hình trong họ encoding như ALBERT, BERT, DistilBERT, ELECTRA, RoBERTa, ... Trong đó có một mô hình khá nổi trội được sử dụng bởi khá nhiều nhóm tham gia cuộc thi là DeBERTaV3.
 
-- DeBERTa cải thiện các mô hình BERT và RoBERTa bằng cách sử dụng cơ chế tập trung disentangled và bộ giải mã mặt nạ cải tiến. Với hai cải tiến đó, DeBERTa vượt trội hơn RoBERTa trong hầu hết các tác vụ hiểu ngôn ngữ tự nhiên (NLU) với 80GB dữ liệu huấn luyện.
+- DeBERTa cải thiện các mô hình BERT và RoBERTa bằng cách sử dụng cơ chế tập trung disentangled và bộ giải mã mặt nạ cải tiến. Trong DeBERTa V3, các tác giả đã cải thiện hiệu quả của DeBERTa bằng cách sử dụng tiền huấn luyện kiểu ELECTRA với Chia sẻ Nhúng Gradient-Disentangled. So với DeBERTa, phiên bản V3 của các tác giả cải thiện đáng kể hiệu suất mô hình trên các tác vụ downstream. 
 
-- Trong DeBERTa V3, các tác giả đã cải thiện hiệu quả của DeBERTa bằng cách sử dụng tiền huấn luyện kiểu ELECTRA với Chia sẻ Nhúng Gradient-Disentangled. So với DeBERTa, phiên bản V3 của các tác giả cải thiện đáng kể hiệu suất mô hình trên các tác vụ downstream. Bạn có thể tìm hiểu thêm chi tiết kỹ thuật về mô hình mới từ bài báo của chúng tôi.
+- Một số task quan trọng mà mô trình encoding của transformer cung cấp bao gồm: Fill-Mask, Zere-shot Classification, Named Entity Recognition, Sentiment Analyzing, ... Bản thân DeBERTaV3 được pre-trained để phục vụ tác vụ Fill-Mask nhưng thư viện Transformers đã cung cấp đầy đủ các công cụ để ta có thể fine-tuning mô hình cho các tác vụ classification.
 
-- Mô hình cơ sở DeBERTa V3 đi kèm với 12 lớp và kích thước ẩn là 768. Nó chỉ có 86M tham số backbone với từ điển chứa 128K token, giới thiệu 98M tham số trong lớp Nhúng. Mô hình này được huấn luyện bằng 160GB dữ liệu như DeBERTa V2.
+- Cụ thể ta sẽ dùng lênh sau:
+```python
+AutoModelForSequenceClassification.from_pretrained(cfg.checkpoint,num_labels=1)
+```
+- Trong đó:
+    - `cfg.checkpoint`: checkpoint của mô hình DeBERTaV3 (có thể là local hoặc trên huggingface).
+    - `num_labels=1`: Nhóm dự định sẽ để mô hình dự đoán số thực từ 1 đến 6 nên ta sẽ chỉ cần một label.
+- Sau khi chạy lệnh này ta sẽ nhận được thông báo 
+```
+Some weights of DebertaV2ForSequenceClassification were not initialized from the model checkpoint at /kaggle/input/init-aes2/microsoft__deberta-v3-small and are newly initialized: ['classifier.bias', 'classifier.weight', 'pooler.dense.bias', 'pooler.dense.weight'] 
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+```
+- Có nghĩa là ta sẽ không thể tận dụng được các trọng số đã được pre-trained của mô hình nên ta cần phải fine-tuning một mô hình hoàn toàn mới trên tập dữ liệu của mình.
 
-Nếu cần biết thêm chi tiết triển khai và cập nhật thì hãy truy cập [repo](https://github.com/microsoft/DeBERTa?tab=readme-ov-file) này.
-
-#### Một số ứng dụng nổi bật:
-1. Tạo Nội Dung Tự Động: DeBERTa v3 có thể tạo ra các bài đăng blog, bài viết tin tức, và mô tả sản phẩm chất lượng cao cho các ứng dụng khác nhau. Tính năng này có thể rất hữu ích cho các doanh nghiệp cần tạo ra lượng lớn nội dung nhanh chóng.
-
-2. Chatbots và Trợ lý Cá Nhân: DeBERTa v3 là lựa chọn tuyệt vời cho chatbots và trợ lý cá nhân do khả năng tạo ra các phản hồi có ý nghĩa và mạch lạc. Mô hình có thể được sử dụng bởi các ứng dụng này để hiểu các truy vấn của người dùng và tạo ra các phản hồi phù hợp.
-
-3. Phân Tích Cảm Xúc: Các doanh nghiệp cần theo dõi cảm xúc về thương hiệu trên các nền tảng truyền thông xã hội hoặc các trang web đánh giá có thể thấy mức độ chính xác cao của DeBERTa v3 trong việc phân tích cảm xúc rất hữu ích. Mô hình có khả năng phân tích nhanh chóng lượng lớn văn bản và tiết lộ ý kiến và sở thích của khách hàng.
-
-4. Trả lời Câu Hỏi: Hiệu suất ấn tượng của DeBERTa v3 trong các tác vụ trả lời câu hỏi có thể được sử dụng trong nhiều ứng dụng, bao gồm dịch vụ khách hàng, chatbots, và công cụ tìm kiếm. Mô hình có thể nhanh chóng hiểu các truy vấn của người dùng và cung cấp các phản hồi chính xác dựa trên dữ liệu có sẵn.
-
-Giả định rằng mô hình được tiền xử lý và huấn luyện như được mô ta ở bên dưới, bảng sau đây chỉ tương đối chỉ ra một số chỉ số đo lường để so sánh khát quát các mô hình hiện hữu trong danh sách checkpointing.
-
-**Chú ý**: Giá trị thực sự đạt được sẽ thay đổi tùy thuộc vào tùy chình tham số huấn luyện, các chỉ số cấu hình như số epoch, training fold, hệ số học, ...
-
-| Model | Kappa | Accuracy | Training Loss | Time Consumed |
-|-------|-------|----------|---------------|---------------|
-| google-bert/bert-base-uncased | ~0.8 | ~0.85 | ~0.15 | ~2h |
-| google-bert/bert-base-cased | ~0.8 | ~0.85 | ~0.15 | ~2h |
-| microsoft/deberta-v3-large | ~0.9 | ~0.9 | ~0.1 | ~3h |
-| microsoft/deberta-v3-base | ~0.85 | ~0.88 | ~0.12 | ~2.5h |
-| microsoft/deberta-v3-small | ~0.8 | ~0.85 | ~0.15 | ~2h |
-| microsoft/deberta-v3-xsmall | ~0.75 | ~0.8 | ~0.2 | ~1.5h |
-
+- Mô hình DeBERTaV3 sẽ có 4 phiên bản với độ lớn giảm dần như sau:
+    - DeBERTaV3-large: mô hình quá lớn gây ra tràn VRAM nên không thể sử dụng được.
+    - DeBERTaV3-base: Mô hình cho kết quả tốt nhất, được nhóm sử dụng để làm bài nộp. Mỗi epoch của mô hình này mất khoảng 30 phút chạy
+    - DeBERTaV3-small: Mô hình cho tốc độ chạy nhanh hơn (20 phút/epoch) và kết quả cũng khá tốt nên được nhóm sử dụng chủ yếu để thử nghiệm.
+    - DeBERTaV3-xsmall: Mô hình nhỏ nhất, được nhóm sử dụng để khởi đầu.
 ### 3.2. Tiền xử lý dữ liệu và tokenizer (các hàm preprocessing)
 ### 3.2.1. Tokenizer của mô hình
 - Tokenizer của mô hình sẽ chuyển văn bản thành một dãy các token. Dãy token này sẽ có 3 thành phần để biểu diễn:
