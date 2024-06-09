@@ -24,50 +24,18 @@ Nếu cần biết thêm chi tiết triển khai và cập nhật thì hãy truy
 
 4. Trả lời Câu Hỏi: Hiệu suất ấn tượng của DeBERTa v3 trong các tác vụ trả lời câu hỏi có thể được sử dụng trong nhiều ứng dụng, bao gồm dịch vụ khách hàng, chatbots, và công cụ tìm kiếm. Mô hình có thể nhanh chóng hiểu các truy vấn của người dùng và cung cấp các phản hồi chính xác dựa trên dữ liệu có sẵn.
 
-#### Fine-tuning trên các tác vụ NLU
-| Model | Vocabulary(K) | Backbone #Params(M) | SQuAD 2.0(F1/EM) | MNLI-m/mm(ACC) |
-|-------|---------------|---------------------|------------------|----------------|
-| RoBERTa-base | 50 | 86 | 83.7/80.5 | 87.6/- |
-| XLNet-base | 32 | 92 | -/80.2 | 86.8/- |
-| ELECTRA-base | 30 | 86 | -/80.5 | 88.8/ |
-| DeBERTa-base | 50 | 100 | 86.2/83.1 | 88.8/88.5 |
-| DeBERTa-v3-base | 128 | 86 | 88.4/85.4 | 90.6/90.7 |
-| DeBERTa-v3-base + SiFT | 128 | 86 | -/- | 91.0/- |
+Giả định rằng mô hình được tiền xử lý và huấn luyện như được mô ta ở bên dưới, bảng sau đây chỉ tương đối chỉ ra một số chỉ số đo lường để so sánh khát quát các mô hình hiện hữu trong danh sách checkpointing.
 
-#### Fine-tuning với HF transformers
+**Chú ý**: Giá trị thực sự đạt được sẽ thay đổi tùy thuộc vào tùy chình tham số huấn luyện, các chỉ số cấu hình như số epoch, training fold, hệ số học, ...
 
-```bash
-#!/bin/bash
-
-cd transformers/examples/pytorch/text-classification/
-
-pip install datasets
-export TASK_NAME=mnli
-
-output_dir="ds_results"
-
-num_gpus=8
-
-batch_size=8
-
-python -m torch.distributed.launch --nproc_per_node=${num_gpus} \
-  run_glue.py \
-  --model_name_or_path microsoft/deberta-v3-base \
-  --task_name $TASK_NAME \
-  --do_train \
-  --do_eval \
-  --evaluation_strategy steps \
-  --max_seq_length 256 \
-  --warmup_steps 500 \
-  --per_device_train_batch_size ${batch_size} \
-  --learning_rate 2e-5 \
-  --num_train_epochs 3 \
-  --output_dir $output_dir \
-  --overwrite_output_dir \
-  --logging_steps 1000 \
-  --logging_dir $output_dir
-
-```
+| Model | Kappa | Accuracy | Training Loss | Time Consumed |
+|-------|-------|----------|---------------|---------------|
+| google-bert/bert-base-uncased | ~0.8 | ~0.85 | ~0.15 | ~2h |
+| google-bert/bert-base-cased | ~0.8 | ~0.85 | ~0.15 | ~2h |
+| microsoft/deberta-v3-large | ~0.9 | ~0.9 | ~0.1 | ~3h |
+| microsoft/deberta-v3-base | ~0.85 | ~0.88 | ~0.12 | ~2.5h |
+| microsoft/deberta-v3-small | ~0.8 | ~0.85 | ~0.15 | ~2h |
+| microsoft/deberta-v3-xsmall | ~0.75 | ~0.8 | ~0.2 | ~1.5h |
 
 ### 3.2. Tiền xử lý dữ liệu và tokenizer (các hàm preprocessing)
 ### 3.2.1. Tokenizer của mô hình
