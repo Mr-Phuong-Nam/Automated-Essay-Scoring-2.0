@@ -279,6 +279,7 @@ Bây giờ chúng ta có thể kết luận rằng mô hình dự đoán như sa
 
 Câu đầu tiên: `NEGATIVE`: 0.0402, `POSITIVE`: 0.9598
 Câu thứ hai: `NEGATIVE`: 0.9995, `POSITIVE`: 0.0005
+
 **Ứng dụng:** Transformer pipeline đã được áp dụng trong một loạt các nhiệm vụ NLP:
 - **Phân loại văn bản:** Phân tích cảm xúc, phân loại chủ đề và phát hiện thư rác được xử lý một cách hiệu quả bởi đường ống phân loại văn bản.
 - **Nhận dạng thực thể (NER):** Việc xác định các thực thể như tên, địa điểm, và ngày tháng trong văn bản được đơn giản hóa với đường ống NER.
