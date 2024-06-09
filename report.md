@@ -284,6 +284,8 @@ model = AutoModelForSequenceClassification. \
 - Tiếp theo ta sẽ tắt dropout cho mô hình. Dropout là một kỹ thuật regularization được sử dụng để ngăn chặn overfitting trong mạng neural bằng cách ngẫu nhiên "dropout" một phần của các đơn vị (neurons) trong quá trình huấn luyện. Trong trường hợp này, khi sử dụng regression với NLP transformers, việc loại bỏ dropout là cần thiết để tránh batch normalization gây ra sự không ổn định trong dự đoán của mô hình. Điều này là do dropout có thể làm giảm tính ổn định của batch normalization đối với việc dự đoán giá trị liên tục.
 ## 4. Prompt Engineering với Meta-Llama-3-8B-Instruct
 ### 4.1. Giới thiệu mô hình
+- Mô hình này một mô hình ngôn ngữ lớn với khoảng 8 tỷ tham số. Mô hình thuốc họ Encoder-decoder models, được ra mắt vào ngày  18-04-2024 được sử dụng chủ yếu cho tác vụ Text Generation. 
+- Mô hình sẽ được áp dùng vào bài toán bằng cách đưa bài luận và các hướng dẫn chấm điểm vào mô hình, sau đó yêu cầu mô hình sinh ra một đoạn văn bản chấm điểm cho bài luận đó. Bởi vì các mô hình ngôn ngữ lớn như Meta-Llama-3-8B-Instruct đã được huấn luyện trên một lượng lớn dữ liệu nên chúng có khả năng phần nào cảm nhận được gần đúng điểm số của bài luận nhưng vì không được huấn luyện trên tập dữ liệu này nên kết quả trả về sẽ sai lệch khá nhiều.
 ### 4.2. Các bước thực hiện
 
 **Khởi tạo pipeline**:
