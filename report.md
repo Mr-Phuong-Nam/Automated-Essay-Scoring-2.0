@@ -390,27 +390,119 @@ def data_preprocessing(path, tokenizer, max_length):
 - Vì mô hình chỉ cần biết về cấu trúc của dãy token nên ta sẽ loại bỏ các cột không cần thiết còn lại
 ### 3.3. Các tham số quan trọng
 
-**Mô hình DeBERTaV3**
-- Head `ForSequenceClassification`: Thêm layer classifier cho mô hình gốc.
-- `num_labels`: Số lượng labels mong muốn mô hình có thể dự đoán. Trong bài này là 6, vì điểm số của essay là số nguyên trải dài từ 1 đến 6. Nguồn [Link to the Holistic Scoring Rubric](https://storage.googleapis.com/kaggle-forum-message-attachments/2733927/20538/Rubric_%20Holistic%20Essay%20Scoring.pdf).
+**Mô hình DeBERTaV3**:
 
-**Tokenizer**:
-- `truncation`: Điều khiển độ dài tối đa nếu là `True`, khi đó độ dài tối đa được quy định bởi `max_length`.
-- `max_length`: Độ dài tối đa được dùng bởi `truncation`. Trong bài này được điều chỉnh thành 1024.
+- `num_labels`: Số lượng label cần dự đoán.
+- `hidden_dropout_prob`: dropout ở lớp ẩn.
+- `attention_probs_dropout_prob`: dropout ở lớp attention.
+
+Lý do chọn `hidden_dropout_prob=0` và `attention_probs_dropout_prob=0`: Để tránh batch normalisation gây ra sự không ổn định trong dự đoán của mô hình. Dropout có thể làm giảm tính ổn định của batch normalisation đối với việc dự đoán giá trị liên tục.
 
 **TrainingArguments**:
 - `learning_rate`: Hệ số học.
-- `warmup_ratio`: Tỉ lệ warmup.
-- `num_train_epochs`: Số lượng epochs.
-- `per_device_train_batch_size`: Kích thước batch huấn luyện trên mỗi thiết bị (CPU, GPU)
+- `warmup_ratio`: Tỷ lệ warmup.
+- `num_train_epochs`: Số epoch huấn luyện.
+- `per_device_train_batch_size`: Kích thước batch huấn luyện trên mỗi thiết bị.
 - `per_device_eval_batch_size`: Kích thước batch đánh giá trên mỗi thiết bị.
-- `fp16`: Sử dụng floating point 16 để tăng tốc quá trình huấn luyện.
-- `lr_scheduler_type`: Loại learning rate scheduler áp dụng cho quá trình training.
-- `weight_decay`: Hệ số weight decay áp dụng cho tất cả các tầng từ bias và LayerNorm.
+- `fp16`: Sử dụng mixed precision training.
+- `lr_scheduler_type`: Loại scheduler sử dụng cho hệ số học.
+- `weight_decay`: Hệ số weight decay.
+- `load_best_model_at_end`: Load mô hình tốt nhất ở cuối quá trình huấn luyện.
+- `optim`: Optimiser sử dụng.
+
+**Trainer**:
+- `model`: Mô hình cần huấn luyện.
+- `args`: Các tham số huấn luyện.
+- `train_dataset`: Dữ liệu huấn luyện.
+- `eval_dataset`: Dữ liệu đánh giá.
+- `data_collator`: Hàm tạo batch từ dữ liệu.
+- `tokenizer`: Tokenizer sử dụng để mã hóa dữ liệu.
+- `compute_metrics`: Hàm tính toán các metric đánh giá mô hình.
 
 ### 3.4. Train mô hình sử dụng StratifiedKFold
 
-Dataset được chia thành các fold với tỉ lệ label cân bằng nhờ `StratifiedKFold`, các fold này được huấn luyện trên cùng một mô hình. Sau khi kết thúc quá trình cho một fold, mô hình được lưu lại để thử nghiệm và gửi kết quả.
+Dataset được chia thành 5 folds bằng cách sử dụng `StratifiedKFold` để đảm bảo tỉ lệ các labels trong mỗi fold không thay đổi so với tỉ lệ của toàn bộ dữ liệu. Mỗi mô hình sẽ được huấn luyện trên 4 folds và đánh giá trên fold còn lại. Các mô hình được đánh giá dựa trên `quadratic weighted kappa`. Kết quả dự đoán cuối cùng sẽ là trung bình của các kết quả dự đoán từ 5 mô hình.
+
+**StratifiedKFold**
+
+`StratifiedKFold` là một phương pháp chia dữ liệu thành các folds sao cho tỉ lệ của các labels trong mỗi fold không thay đổi so với tỉ lệ của toàn bộ dữ liệu.
+
+`StratifiedKFold` trả về các splits chứa các chỉ số của dữ liệu trong mỗi fold. Mỗi split chứa 2 mảng chỉ số, một mảng chỉ số cho tập huấn luyện và một mảng chỉ số cho tập kiểm tra tương tự như `KFold`.
+
+Ví dụ: (Nguồn: [3.1. Cross-validation: evaluating estimator performance](https://scikit-learn.org/stable/modules/cross_validation.html#stratified-k-fold))
+
+```python
+from sklearn.model_selection import StratifiedKFold, KFold
+import numpy as np
+
+X, y = np.ones((50, 1)), np.hstack(([0] * 45, [1] * 5))
+skf = StratifiedKFold(n_splits=5)
+for train, test in skf.split(X, y):
+    print('train -  {}   |   test -  {}'.format(
+        np.bincount(y[train]), np.bincount(y[test])))
+# Output
+# train -  [30  3]   |   test -  [15  2]
+# train -  [30  3]   |   test -  [15  2]
+# train -  [30  4]   |   test -  [15  1]
+
+kf = KFold(n_splits=3)
+for train, test in kf.split(X, y):
+    print('train -  {}   |   test -  {}'.format(
+        np.bincount(y[train]), np.bincount(y[test])))
+
+# Output:
+# train -  [28  5]   |   test -  [17]
+# train -  [28  5]   |   test -  [17]
+# train -  [34]   |   test -  [11  5]
+```
+
+Ta có thể thấy rằng `StratifiedKFold` chia dữ liệu sao cho tỉ lệ của các label trong mỗi fold không thay đổi so với tỉ lệ của toàn bộ dữ liệu. Trong khi đó, `KFold` chia dữ liệu một cách ngẫu nhiên mà không quan tâm đến tỉ lệ của các label.
+
+**Các bước huấn luyện mô hình**
+
+- Gọi hàm `data_preprocessing` lấy dữ liệu đã được tiền xử lý.
+- Chia dữ liệu thành 5 fold sử dụng StratifiedKFold.
+- Với mỗi fold:
+    - Khởi tạo mô hình `DeBERTaV3`.
+    - Khởi tạo `TrainingArguments`.
+    - Khởi tạo `Trainer`.
+    - Huấn luyện mô hình.
+    - Đánh giá mô hình.
+    - Lưu mô hình.
+
+**Đánh giá mô hình** 
+
+Nguồn: [Learning Agency Lab - Automated Essay Scoring 2.0](https://www.kaggle.com/competitions/learning-agency-lab-automated-essay-scoring-2/overview/evaluation)
+
+Metric dùng để đánh giá mô hình là `quadratic weighted kappa`. `quadratic weighted kappa` là một metric được sử dụng để đánh giá mức độ đồng thuận giữa hai chuỗi số. Metric này thường được sử dụng trong các bài toán dự đoán điểm số, và đề bài trên Kaggle quy định sử dụng metric này.
+
+Metric này được tính như sau. Đầu tiên, một ma trận histogram $O^{N \times N}$ được tạo ra, với $O_{i, j}$ là số lượng mẫu có giá trị thực tế là $i$ và giá trị dự đoán là $j$. Một ma trận trọng số khác $W^{N \times N}$ được tạo ra với:
+
+$$w_{i, j} = \frac{(i - j)^2}{(N - 1)^2}$$
+
+<!-- Một ma trận trọng số kỳ vọng $E$ được tính bằng cách lấy tích của tổng theo hàng và cột của ma trận histogram:
+
+$$E_{i, j} = \frac{O_{i, \cdot} O_{\cdot, j}}{n}$$ -->
+
+Một ma trận trọng số kỳ vọng $E$ được tính bằng cách lấy outer product của histogram thực tế và histogram dự đoán, được chuẩn hóa sao cho tổng của $E$ và $O$ bằng nhau.
+
+Cuối cùng, `quadratic weighted kappa` được tính bằng công thức:
+
+$$\kappa = 1 - \frac{\sum_{i, j} w_{i, j} O_{i, j}}{\sum_{i, j} w_{i, j} E_{i, j}}$$
+
+`quadratic weighted kappa` có giá trị nằm trong khoảng $[0, 1]$, với 1 là giá trị tốt nhất. Kappa càng gần 0 có nghĩa là random agreement, còn kappa càng gần 1 có nghĩa là complete agreement.
+
+Trong bài này nhóm sử dụng hàm `cohen_kappa_score` từ thư viện `sklearn` để tính `quadratic weighted kappa`. Môt ví dụ về cách sử dụng hàm này như sau:
+
+```python
+from sklearn.metrics import cohen_kappa_score
+
+y_true = [1, 2, 3, 4, 3]
+y_pred = [2, 2, 4, 4, 5]
+kappa = cohen_kappa_score(y_true, y_pred, weights='quadratic')
+print(kappa)
+# Output: 0.6153846153846154
+```
 
 ### 3.5. Điều chỉnh mô hình về dự đoán regression
 Có 2 hướng để có thể sử dụng mô hình DeBERTaV3 để dự đoán 6 điểm số của bài luận.
@@ -444,35 +536,41 @@ model = AutoModelForSequenceClassification. \
 
 **Khởi tạo pipeline**:
 
-Loại pipeline được chọn là `text-generation` và `device_map=auto` để hệ thống quyết định thiết bị nào sẽ được sử dụng.
+Pipeline được khởi tạo với task là `text-generation` và model là `Meta-Llama-3-8B-Instruct`. Tham số `device_map=auto` được sử dụng để tự động chọn thiết bị phù hợp.
+
+Lý do chọn task `text-generation`: Task này phù hợp với bài toán chấm điểm bài luận vì mô hình sẽ sinh ra một đoạn văn bản mới cụ thể là điểm số của bài luận dựa trên đoạn văn bản đã cho.
 
 **Prompt Engineering**
 
 *Input: Đoạn văn cần chấm diểm.*
 
-*Output: Prompt chấm điểm sau khi áp dụng chat template.*
+*Output: Điểm của đoạn văn.*
 
-    messages = [
-        {'role': 'system', 'content': 'You are a strict teacher.'},
-        {'role': 'user', 'content': instruction + essay},
-        {'role': 'assistant', 'content': f'\n\nThe score is: '}
-    ]
+```python
+prompt = [
+    {'role': 'system', 'content': "As a teacher, you are going to grade your student's essay."},
+    {'role': 'user', 'content': instruction + essay},
+    {'role': 'assistant', 'content': f'\n\nThe score is: '}
+]
+```
 
-Messages gồm các role:
+Prompt gồm các role với nội dung tương ứng:
 - `system`: Cho biết ngữ cảnh và chỉ dẫn ban đầu của prompt.
-- `user`: Yêu cầu đặt ra cần được giải quyết. Ở đây yêu cầu chấm điểm từ 1-6 và kèm theo đoạn văn.
+- `user`: Yêu cầu đặt ra. Ở đây yêu cầu chấm điểm từ 1-6 và kèm theo đoạn văn.
 - `assistant`: Phản hồi mà người dùng mong muốn.
 
-Sau đó trả về messages.
+Pipeline khi gọi cũng được truyền vào tham số `max_new_tokens=1` để chỉ sinh ra một token mới là điểm số của bài luận. Prompt được đưa vào pipeline để sinh ra điểm số của bài luận sau đó trích xuất điểm số từ đoạn văn và trả về cho hàm.
 
-**Scoring**
+Với mỗi bài luận, nếu ký tự sinh ra không phải là số thì sẽ gọi lại pipeline với đoạn văn bản đó cho đến khi sinh ra ký tự số hoặc sau 5 lần thử. Nếu vẫn không sinh ra ký tự số thì trả về `None`.
+
+<!-- **Scoring**
 
 *Input: Messages từ bước trên*
 
 *Output: Điểm cho những essay đó*
 
-Messages được đưa vào pipeline, điểm được trích xuất và trả về cho hàm.
+Messages được đưa vào pipeline, điểm được trích xuất và trả về cho hàm. -->
 
-**Lặp lại cho cả dataset**
+**Lặp lại quá trình cho cả dataset**
 
-Dùng method `map` của HuggingFace Dataset để thực hiện song song hóa việc tính điểm để tận dụng tài nguyên và tăng tốc độ xử lý.
+Với mỗi bài luận trong dataset, nhóm sẽ thực hiện các bước trên để sinh ra điểm số cho bài luận đó. Để thuận tiện, có thể dung method `map` của `pandas` để áp dụng hàm cho từng dòng trong dataset.
