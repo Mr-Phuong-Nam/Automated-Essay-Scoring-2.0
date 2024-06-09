@@ -1,4 +1,141 @@
 ## 1. EDA (Exploratory Data Analysis)
+### 1.1 Giới thiệu bộ dữ liệu 
+- Dữ liệu được chia ra 2 tập là tập dữ liệu **train** và dữ liệu **test** được tham khảo từ bộ dữ liệu cuộc thi bao gồm khoảng 24000 bài luận, tranh luận do học sinh viết [Đường dẫn đến the Holistic Scoring Rubric](https://storage.googleapis.com/kaggle-forum-message-attachments/2733927/20538/Rubric_%20Holistic%20Essay%20Scoring.pdf). Mỗi bài luận được chấm theo thang điểm từ 1 đến 6. Mục tiêu sẽ là từ bộ dữ liệu train xây dựng mô hình phù hợp để dự đoán số điểm mà một bài luận nhận được từ văn bản của nó (tập test).
+### 1.2 Kiểm tra dữ liệu 
+#### Kích thước tập dữ liệu 
+
+|        | Train|Test|
+|--------|------|----|
+| Số dòng|17307 |3   |
+| Số cột |  3   |2   |
+
+#### Ý nghĩa của các dòng và cột 
+Gồm 3 bộ dữ liệu
+- train.csv: Các bài luận và điểm số được sử dụng làm dữ liệu train
+
+| Field     | Description                             |
+|-----------|-----------------------------------------|
+| `essay_id`  | ID duy nhất của bài luận                  |
+| `full_text` | Câu trả lời đầy đủ của bài luận                 |
+| `score`   | Điểm tổng thể của bài luận theo thang điểm 1-6 |
+
+- test.csv: Các bài luận được sử dụng làm dữ liệu test. Chứa các trường giống như train.csv, ngoại trừ trường score.
+
+| Field     | Description                             |
+|-----------|-----------------------------------------|
+| `essay_id`  | ID duy nhất của bài luận              |
+| `full_text` | Câu trả lời đầy đủ của bài luận       |    
+#### Kiểu dữ liệu mỗi cột 
+- Cột `essay_id` và cột `full_text` ở dữ liệu train và text đều có kiểu là **object**.
+- Cột `score` ở bộ dữ liệu train là **int**.
+#### Kiểm tra missing value  
+- Dữ liệu không bị missing.
+#### Kiểm tra trùng lắp
+- Dữ liệu không bị trùng lắp.
+### 2. Phân phối và thống kê dữ liệu 
+#### Dữ liệu numerical 
+- Cột dữ liệu có dạng numerical là cột `score` ở bộ dữ liệu train.
+  - Bảng tóm tắt số liệu thống kê mô tả.
+      |      | Score                             |
+      |-----------|----------|
+      | min | 1          |
+      | lower_quartile | 2 |    
+      | median | 3   |  
+      | upper_quartile | 4  |   
+      | max | 6  |    
+  - Phân bố các bài luận theo điểm số.
+  <figure>
+      <img title="a title" alt="Alt text" src="rpimg/score_distribution.svg">
+      <figcaption style="text-align: center;"><em>Phân bố các bài luận theo điểm số</em></figcaption>
+  </figure>
+
+##### Nhận xét:
+- Phần lớn bài luận nhận được điểm số 3 (6280 bài), cho thấy đây là mức điểm phổ biến nhất.
+Điểm số 2 và 4 cũng có số lượng bài luận khá cao, lần lượt là 4723 và 3926 bài.
+- Điểm số 1 và 5 có số lượng bài luận ít hơn đáng kể, lần lượt là 1252 và 970 bài.
+Điểm số 6 là mức điểm hiếm gặp nhất với chỉ 156 bài luận, cho thấy rất ít bài đạt được điểm số này.
+- Có xu hướng giảm dần số lượng bài luận từ điểm số 3 xuống điểm số 6, cho thấy việc đạt được điểm số cao (5 và 6) là khó khăn hơn so với điểm số thấp hoặc trung bình (1-4).
+
+#### Dữ liệu categorical 
+- Do các cột còn lại là các cột mang ý nghĩa định danh và text, nên ta không thu được nhiều ý nghĩa qua cách phân tích trực tiếp .Nhóm sẽ khai thác, khám phá cột `full_text` và mối quan hệ giữa chúng với điểm số qua các câu hỏi phía dưới.
+### 3. Các câu hỏi khám phá dữ liệu 
+#### Phân bố của điểm số các bài luận theo độ dài
+
+<figure>
+      <img title="a title" alt="Alt text" src="rpimg/score_distribution_by_length.png">
+      <figcaption style="text-align: center;"><em>Phân bố score theo độ dài văn bản</em></figcaption>
+ </figure>
+<figure>
+      <img title="a title" alt="Alt text" src="rpimg/length_distribution.png">
+      <figcaption style="text-align: center;"><em>Phân bố score theo độ dài văn bản</em></figcaption>
+ </figure>
+
+##### Nhận xét chung:
+  - Những bài luận có độ dài càng lớn thì số điểm thấp càng ít.
+  - Ở các bài luận (0-500] từ chỉ có 0.00697% được điểm 6 dù số lượng bài luận trong khoảng này rất lớn, trong khi (1000-1500] từ thì chiếm 27% điểm 6.
+  - Hầu như các luận trên 1000 từ không có điểm 1.
+  - Các luận (500-1000] rất đa dạng điểm, số lượng bài điểm 4, 5 chiếm đa số.
+  - Các luận (1000-1500] phân bố điểm khá đều và không có điểm 1 cùng với số lượng khá ít cho thấy chất lượng có thể được đo đạc theo lượng từ trong bài.
+=> Có thể thấy phần lớn bài luận có số lượng từ vựng nhiều sẽ có điểm số cao hơn.
+
+  - Tuy nhiên khoảng (1500-2000] từ chỉ có một bài đạt điểm 2 không thể hiện được phán đoán gì. Ta xem thử bài văn này có nội dung như thế nào.
+
+#### Kiểm tra các bài luận có chứa từ vựng sai chính tả, liệu điều này có ảnh hưởng đến điểm số không
+<figure>
+      <img title="a title" alt="Alt text" src="rpimg/misspelled_count_score.svg">
+      <figcaption style="text-align: center;"><em>Phân bố số từ vựng sai chính tả</em></figcaption>
+</figure>
+
+##### Nhận xét:
+  - Số lượng bài luận mắc lỗi từ 0 - 20 từ là nhiều nhất và tập trung ở mức điểm 2 - 4.
+  - Hầu như các bài luận được điểm càng cao thì càng mắc ít lỗi chính tả.
+  - Các điểm ngoại lai (các bài mắc rất nhiều lỗi - khoảng trên 60 lỗi) có điểm từ 1 - 4.
+  - Bài mắc nhiều lỗi nhất (trên 100 lỗi) thường có điểm là 1.
+#### WordCloud
+<figure>
+      <img title="a title" alt="Alt text" src="rpimg/wordcloud.svg">
+      <figcaption style="text-align: center;"><em>WordCloud</em></figcaption>
+ </figure>
+
+##### Nhận xét
+- Có thể thấy chủ đề của các bài luận xoay quanh driverless car, Electoral College, Seagoing Cowboy, Coding System, Face Mar,...
+- Ta xem xét bigram của các bài luận có score là 6 và 1 để so sánh.
+<figure>
+      <img title="a title" alt="Alt text" src="rpimg/top_bigrams.svg">
+      <figcaption style="text-align: center;"><em>Top BiGrams</em></figcaption>
+ </figure>
+
+##### Nhận xét:
+- Những bigrams được sử dụng ở cả hai mức điểm là electoral college, popular vote và là những từ chủ đề như đã phân tích Wordcloud.
+- Hầu như các bigrams nằm trong mức điểm 6 lại rất hiếm khi xuất hiện trong mức điểm 1, có thể vì thế nên các bài luận có score 1 không có tính thống nhất với chủ đề, do đó có số điểm thấp hơn.
+#### Phân tích cảm xúc (Sentiment Analysis)
+<figure>
+      <img title="a title" alt="Alt text" src="rpimg/sccater_sentiment.png">
+      <figcaption style="text-align: center;"><em>Sentiment Polarity</em></figcaption>
+ </figure>
+
+##### Nhận xét:
+- Nếu xét các mức sentiment <0: Thì nhận thấy các bài essay điểm càng cao thì có sentiment càng cao.
+- Ngược lại ở các mức sentiment >0: Hầu như các bài essay điểm càng thấp thì có sentiment càng cao.
+=> Càng bài essay điểm càng cao có miền sentiment càng thấp.
+
+#### Phân tích độ đa dạng từ vựng
+<figure>
+      <img title="a title" alt="Alt text" src="rpimg/simple_ttr.svg">
+      <figcaption style="text-align: center;"><em>Histogram chỉ số simple TTR </em></figcaption>
+</figure>
+
+##### Nhận xét:
+- Đa phần các bài essay có chỉ số đa dạng từ vựng (Simple TTR) phân bố nhiều ở khoảng (0.4-0.5) .Ta hãy cùng xem mối tương quan giữa chúng với điểm số của các bài essay.
+<figure>
+      <img title="a title" alt="Alt text" src="rpimg/ttr_score.svg">
+      <figcaption style="text-align: center;"><em>Mối quan hệ chỉ số simple ttr và score</em></figcaption>
+</figure>
+
+##### Nhận xét:
+- Không có mối quan hệ tỉ lệ thuận giữa điểm số và độ đa dạng từ vựng .Trong trường hợp datasets này có thể có cách chấm điểm không dựa vào độ đa dạng từ hoặc có thể các bài có nhiều từ nhưng tác giả lại sử dụng sai ngữ cảnh dẫn đến điểm có thể sẽ không cao.
+- Tuy nhiên để đạt điểm cao (từ điểm 5 trở lên) thì hầu như các bài essay phải có chỉ số `Simple TTR` từ điểm 0.25 trở lên.
+
 ## 2. Transformer models dùng cho xử lý lý ngôn ngữ tự nhiên (https://huggingface.co/learn/nlp-course/chapter1/1)
 ### 2.1. Định nghĩa, các thức hoạt động
 ### 2.2. Phân loại (3 loại)
