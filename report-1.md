@@ -438,8 +438,6 @@ def data_preprocessing(path, tokenizer, max_length):
 - `hidden_dropout_prob`: dropout ở lớp ẩn.
 - `attention_probs_dropout_prob`: dropout ở lớp attention.
 
-Lý do chọn `hidden_dropout_prob=0` và `attention_probs_dropout_prob=0` là để tránh batch normalisation gây ra sự không ổn định trong dự đoán của mô hình. Dropout có thể làm giảm tính ổn định của batch normalisation đối với việc dự đoán giá trị liên tục.
-
 **TrainingArguments**:
 - `learning_rate`: Hệ số học.
 - `warmup_ratio`: Tỷ lệ warmup.
@@ -569,7 +567,7 @@ model = AutoModelForSequenceClassification. \
                 cache_dir='./cache')
 ```
 - Đầu tiên ta điều chỉnh `num_labels=1` để mô hình chỉ dự đoán một giá trị điểm số duy nhất (ở đây là số thực)
-- Tiếp theo ta sẽ tắt dropout cho mô hình. Dropout là một kỹ thuật regularization được sử dụng để ngăn chặn overfitting trong mạng neural bằng cách ngẫu nhiên "dropout" một phần của các đơn vị (neurons) trong quá trình huấn luyện. Trong trường hợp này, khi sử dụng regression với NLP transformers, việc loại bỏ dropout là cần thiết để tránh batch normalization gây ra sự không ổn định trong dự đoán của mô hình. Điều này là do dropout có thể làm giảm tính ổn định của batch normalization đối với việc dự đoán giá trị liên tục.
+- Tiếp theo ta sẽ tắt dropout cho mô hình. Dropout là một kỹ thuật regularization được sử dụng để ngăn chặn overfitting trong mạng neural bằng cách ngẫu nhiên "dropout" một phần của các đơn vị (neurons) trong quá trình huấn luyện. Khi sử dụng các mô hình NLP transformers cho bài toán hồi quy, việc loại bỏ dropout có thể giúp ổn định các thống kê của batch norm và cải thiện độ chính xác của dự đoán.
 
 ### 3.6. Đánh giá mô hình
 - Mô hình sẽ được đánh giá dựa trên `quadratic weighted kappa` như đã nói ở trên. Mô hình cuối cùng mất 8 giờ để chạy và cho ra 5 mô hình có số điểm như sau: 
