@@ -393,6 +393,7 @@ You should probably TRAIN this model on a down-stream task to be able to use it 
     - Chỉ có 8 token nhưng có 10 phần tử trong `input_ids`, `token_type_ids` và `attention_mask` vì có thêm token `[CLS]` và `[SEP]` ở đầu và cuối dãy token.
     - `token_type_ids` chỉ có giá trị 0 vì chỉ có một input.
     - `attention_mask` chỉ có giá trị 1 vì không có token nào là padding.
+
 ### 3.2.2. Tiền xử lý dữ liệu
 Trong các bài tiểu luận xuất hiện một vài các lỗi có thể gây ảnh hưởng quá trình tokenization nên cần phải xử lý trước khi mã hóa văn bản thành dãy token. Các lỗi đó bao gồm:
 - Xuất hiện chuối `\xa0` (non-breaking space).
@@ -430,8 +431,6 @@ def data_preprocessing(path, tokenizer, max_length):
 - `num_labels`: Số lượng label cần dự đoán.
 - `hidden_dropout_prob`: dropout ở lớp ẩn.
 - `attention_probs_dropout_prob`: dropout ở lớp attention.
-
-Lý do chọn `hidden_dropout_prob=0` và `attention_probs_dropout_prob=0` là để tránh batch normalisation gây ra sự không ổn định trong dự đoán của mô hình. Dropout có thể làm giảm tính ổn định của batch normalisation đối với việc dự đoán giá trị liên tục.
 
 **TrainingArguments**:
 - `learning_rate`: Hệ số học.
@@ -495,15 +494,31 @@ Ta có thể thấy rằng `StratifiedKFold` chia dữ liệu sao cho tỉ lệ 
 
 **Các bước huấn luyện mô hình**
 
+Các bước chuẩn bị ban đầu:
+- Load `tokenizer` từ checkpoint.
+- Khởi tạo `data collator`.
+
+Với hàm train:
 - Gọi hàm `data_preprocessing` lấy dữ liệu đã được tiền xử lý.
-- Chia dữ liệu thành 5 fold sử dụng StratifiedKFold.
-- Với mỗi fold:
-    - Khởi tạo mô hình `DeBERTaV3`.
+- Chia dữ liệu thành 5 fold sử dụng `StratifiedKFold`.
+- Với mỗi split (gồm 4 folds train và 1 fold validation):
+    - Chọn dữ liệu train và dữ liệu validation từ dataset với index lấy từ split.
+    - Load mô hình DeBERTaV3 từ checkpoint và thêm head `ForSequenceClassification`.
     - Khởi tạo `TrainingArguments`.
     - Khởi tạo `Trainer`.
-    - Huấn luyện mô hình.
-    - Đánh giá mô hình.
+    - Huấn luyện mô hình và đánh giá trên dữ liệu validation cuối mỗi epoch.
     - Lưu mô hình.
+
+Với hàm test (dùng để tạo file submission.csv):
+- Tạo một list chứa kết quả dự đoán từ 5 mô hình.
+- Với mỗi mô hình:
+  - Load mô hình và `tokenizer` đã được lưu từ quá trình huấn luyện.
+  - Khởi tạo `data collator`.
+  - Gọi hàm `data_preprocessing_test` để lấy dữ liệu test đã được tiền xử lý.
+  - Khởi tạo `Trainer` với model, `tokenizer` và `data_collator`.
+  - Dự đoán trên dữ liệu test và lưu kết quả vào list.
+- Tính trung bình của 5 kết quả dự đoán.
+- Lưu kết quả dự đoán vào file `submission.csv`.
 
 **Đánh giá mô hình** 
 
@@ -562,7 +577,7 @@ model = AutoModelForSequenceClassification. \
                 cache_dir='./cache')
 ```
 - Đầu tiên ta điều chỉnh `num_labels=1` để mô hình chỉ dự đoán một giá trị điểm số duy nhất (ở đây là số thực)
-- Tiếp theo ta sẽ tắt dropout cho mô hình. Dropout là một kỹ thuật regularization được sử dụng để ngăn chặn overfitting trong mạng neural bằng cách ngẫu nhiên "dropout" một phần của các đơn vị (neurons) trong quá trình huấn luyện. Trong trường hợp này, khi sử dụng regression với NLP transformers, việc loại bỏ dropout là cần thiết để tránh batch normalization gây ra sự không ổn định trong dự đoán của mô hình. Điều này là do dropout có thể làm giảm tính ổn định của batch normalization đối với việc dự đoán giá trị liên tục.
+- Tiếp theo ta sẽ tắt dropout cho mô hình. Dropout là một kỹ thuật regularization được sử dụng để ngăn chặn overfitting trong mạng neural bằng cách ngẫu nhiên "dropout" một phần của các đơn vị (neurons) trong quá trình huấn luyện. Khi sử dụng các mô hình NLP transformers cho bài toán hồi quy, việc loại bỏ dropout có thể giúp ổn định các thống kê của batch norm và cải thiện độ chính xác của dự đoán.
 
 ### 3.6. Đánh giá mô hình
 - Mô hình sẽ được đánh giá dựa trên `quadratic weighted kappa` như đã nói ở trên. Mô hình cuối cùng mất 8 giờ để chạy và cho ra 5 mô hình có số điểm như sau: 
@@ -578,7 +593,7 @@ model = AutoModelForSequenceClassification. \
 ## 4. Prompt Engineering với Meta-Llama-3-8B-Instruct
 ### 4.1. Giới thiệu mô hình
 - Mô hình này một mô hình ngôn ngữ lớn với khoảng 8 tỷ tham số. Mô hình thuộc họ Encoder-decoder models, được ra mắt vào ngày 18-04-2024 được sử dụng chủ yếu cho tác vụ Text Generation. 
-- Mô hình sẽ được áp dùng vào bài toán bằng cách đưa bài luận và các hướng dẫn chấm điểm vào mô hình, sau đó yêu cầu mô hình sinh ra một đoạn văn bản chấm điểm cho bài luận đó. Bởi vì các mô hình ngôn ngữ lớn như Meta-Llama-3-8B-Instruct đã được huấn luyện trên một lượng lớn dữ liệu nên chúng có khả năng phần nào cảm nhận được gần đúng điểm số của bài luận nhưng vì không được huấn luyện trên tập dữ liệu này nên kết quả trả về sẽ sai lệch khá nhiều.
+- Mô hình sẽ được áp dùng vào bài toán bằng cách đưa bài luận và các hướng dẫn chấm điểm vào mô hình, sau đó yêu cầu mô hình sinh ra một đoạn văn bản chấm điểm cho bài luận đó. Bởi vì các mô hình ngôn ngữ lớn như Meta-Llama-3-8B-Instruct đã được huấn luyện trên một lượng lớn dữ liệu nên chúng có khả năng phần nào cảm nhận được gần đúng điểm số của bài luận nhưng vì không được huấn luyện trên tập dữ liệu này nên kết quả trả về kết quả sai lệch khá nhiều.
 ### 4.2. Các bước thực hiện
 
 **Khởi tạo pipeline**:
