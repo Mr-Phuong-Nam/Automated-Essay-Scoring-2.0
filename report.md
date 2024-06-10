@@ -1,15 +1,57 @@
+## Mục lục
+- [Mục lục](#mục-lục)
+- [Bảng đánh giá](#bảng-đánh-giá)
+- [1. EDA (Exploratory Data Analysis)](#1-eda-exploratory-data-analysis)
+  - [1.1 Giới thiệu bộ dữ liệu](#11-giới-thiệu-bộ-dữ-liệu)
+  - [1.2 Kiểm tra dữ liệu](#12-kiểm-tra-dữ-liệu)
+  - [1.2. Phân phối và thống kê dữ liệu](#12-phân-phối-và-thống-kê-dữ-liệu)
+  - [1.3. Các câu hỏi khám phá dữ liệu](#13-các-câu-hỏi-khám-phá-dữ-liệu)
+- [2. Tìm hiểu về kiến trúc transformer](#2-tìm-hiểu-về-kiến-trúc-transformer)
+  - [2.1 Định nghĩa](#21-định-nghĩa)
+  - [2.2 Quy trình hoạt động tổng thể](#22-quy-trình-hoạt-động-tổng-thể)
+  - [2.3 Cấu trúc pipeline](#23-cấu-trúc-pipeline)
+- [3. Fine tuning mô hình DeBERTaV3](#3-fine-tuning-mô-hình-debertav3)
+  - [3.1. Giới thiệu mô hình](#31-giới-thiệu-mô-hình)
+  - [3.2. Tiền xử lý dữ liệu và tokenizer (các hàm preprocessing)](#32-tiền-xử-lý-dữ-liệu-và-tokenizer-các-hàm-preprocessing)
+  - [3.2.1. Tokenizer của mô hình](#321-tokenizer-của-mô-hình)
+  - [3.2.2. Tiền xử lý dữ liệu](#322-tiền-xử-lý-dữ-liệu)
+  - [3.2.3. Hàm tiền xử lý dữ liệu cuối cùng:](#323-hàm-tiền-xử-lý-dữ-liệu-cuối-cùng)
+  - [3.3. Các tham số quan trọng](#33-các-tham-số-quan-trọng)
+  - [3.4. Train mô hình sử dụng StratifiedKFold](#34-train-mô-hình-sử-dụng-stratifiedkfold)
+  - [3.5. Điều chỉnh mô hình về dự đoán regression](#35-điều-chỉnh-mô-hình-về-dự-đoán-regression)
+  - [3.6. Đánh giá mô hình](#36-đánh-giá-mô-hình)
+- [4. Prompt Engineering với Meta-Llama-3-8B-Instruct](#4-prompt-engineering-với-meta-llama-3-8b-instruct)
+  - [4.1. Giới thiệu mô hình](#41-giới-thiệu-mô-hình)
+  - [4.2. Các bước thực hiện](#42-các-bước-thực-hiện)
+- [Tài liệu tham khảo:](#tài-liệu-tham-khảo)
+
+<div style="page-break-after: always;"></div>
+
+## Bảng đánh giá
+|STT|Công việc|Hoàn thành|
+|---|---------|---------|
+|1|EDA|100%|
+|2|Xây dựng mô hình|100%|
+|3|Áp dụng prompt engineering|95%|
+
+|MSSV|Họ và tên|Phân công công việc|Hoàn thành|
+|----|---------|------------------|---------|
+
+
+<div style="page-break-after: always;"></div>
+
 ## 1. EDA (Exploratory Data Analysis)
 ### 1.1 Giới thiệu bộ dữ liệu 
 - Dữ liệu được chia ra 2 tập là tập dữ liệu **train** và dữ liệu **test** được tham khảo từ bộ dữ liệu cuộc thi bao gồm khoảng 24000 bài luận, tranh luận do học sinh viết [Đường dẫn đến the Holistic Scoring Rubric](https://storage.googleapis.com/kaggle-forum-message-attachments/2733927/20538/Rubric_%20Holistic%20Essay%20Scoring.pdf). Mỗi bài luận được chấm theo thang điểm từ 1 đến 6. Mục tiêu sẽ là từ bộ dữ liệu train xây dựng mô hình phù hợp để dự đoán số điểm mà một bài luận nhận được từ văn bản của nó (tập test).
 ### 1.2 Kiểm tra dữ liệu 
-#### Kích thước tập dữ liệu 
+**Kích thước tập dữ liệu** 
 
 |        | Train|Test|
 |--------|------|----|
 | Số dòng|17307 |3   |
 | Số cột |  3   |2   |
 
-#### Ý nghĩa của các dòng và cột 
+**Ý nghĩa của các dòng và cột** 
 Gồm 3 bộ dữ liệu
 - train.csv: Các bài luận và điểm số được sử dụng làm dữ liệu train
 
@@ -25,15 +67,15 @@ Gồm 3 bộ dữ liệu
 |-----------|-----------------------------------------|
 | `essay_id`  | ID duy nhất của bài luận              |
 | `full_text` | Câu trả lời đầy đủ của bài luận       |    
-#### Kiểu dữ liệu mỗi cột 
+**Kiểu dữ liệu mỗi cột** 
 - Cột `essay_id` và cột `full_text` ở dữ liệu train và text đều có kiểu là **object**.
 - Cột `score` ở bộ dữ liệu train là **int**.
-#### Kiểm tra missing value  
+**Kiểm tra missing value**  
 - Dữ liệu không bị missing.
-#### Kiểm tra trùng lắp
+**Kiểm tra trùng lắp**
 - Dữ liệu không bị trùng lắp.
-### 2. Phân phối và thống kê dữ liệu 
-#### Dữ liệu numerical 
+### 1.2. Phân phối và thống kê dữ liệu 
+**Dữ liệu numerical** 
 - Cột dữ liệu có dạng numerical là cột `score` ở bộ dữ liệu train.
   - Bảng tóm tắt số liệu thống kê mô tả.
       |      | Score                             |
@@ -56,10 +98,10 @@ Gồm 3 bộ dữ liệu
 Điểm số 6 là mức điểm hiếm gặp nhất với chỉ 156 bài luận, cho thấy rất ít bài đạt được điểm số này.
 - Có xu hướng giảm dần số lượng bài luận từ điểm số 3 xuống điểm số 6, cho thấy việc đạt được điểm số cao (5 và 6) là khó khăn hơn so với điểm số thấp hoặc trung bình (1-4).
 
-#### Dữ liệu categorical 
+**Dữ liệu categorical** 
 - Do các cột còn lại là các cột mang ý nghĩa định danh và text, nên ta không thu được nhiều ý nghĩa qua cách phân tích trực tiếp .Nhóm sẽ khai thác, khám phá cột `full_text` và mối quan hệ giữa chúng với điểm số qua các câu hỏi phía dưới.
-### 3. Các câu hỏi khám phá dữ liệu 
-#### Phân bố của điểm số các bài luận theo độ dài
+### 1.3. Các câu hỏi khám phá dữ liệu 
+**Phân bố của điểm số các bài luận theo độ dài**
 
 <figure>
       <img title="a title" alt="Alt text" src="rpimg/score_distribution_by_length.png">
@@ -80,7 +122,7 @@ Gồm 3 bộ dữ liệu
 
   - Tuy nhiên khoảng (1500-2000] từ chỉ có một bài đạt điểm 2 không thể hiện được phán đoán gì. Ta xem thử bài văn này có nội dung như thế nào.
 
-#### Kiểm tra các bài luận có chứa từ vựng sai chính tả, liệu điều này có ảnh hưởng đến điểm số không
+**Kiểm tra các bài luận có chứa từ vựng sai chính tả, liệu điều này có ảnh hưởng đến điểm số không**
 <figure>
       <img title="a title" alt="Alt text" src="rpimg/misspelled_count_score.svg">
       <figcaption style="text-align: center;"><em>Phân bố số từ vựng sai chính tả</em></figcaption>
@@ -91,7 +133,7 @@ Gồm 3 bộ dữ liệu
   - Hầu như các bài luận được điểm càng cao thì càng mắc ít lỗi chính tả.
   - Các điểm ngoại lai (các bài mắc rất nhiều lỗi - khoảng trên 60 lỗi) có điểm từ 1 - 4.
   - Bài mắc nhiều lỗi nhất (trên 100 lỗi) thường có điểm là 1.
-#### WordCloud
+**WordCloud**
 <figure>
       <img title="a title" alt="Alt text" src="rpimg/wordcloud.svg">
       <figcaption style="text-align: center;"><em>WordCloud</em></figcaption>
@@ -108,7 +150,7 @@ Gồm 3 bộ dữ liệu
 **Nhận xét:**
 - Những bigrams được sử dụng ở cả hai mức điểm là electoral college, popular vote và là những từ chủ đề như đã phân tích Wordcloud.
 - Hầu như các bigrams nằm trong mức điểm 6 lại rất hiếm khi xuất hiện trong mức điểm 1, có thể vì thế nên các bài luận có score 1 không có tính thống nhất với chủ đề, do đó có số điểm thấp hơn.
-#### Phân tích cảm xúc (Sentiment Analysis)
+**Phân tích cảm xúc (Sentiment Analysis**)
 <figure>
       <img title="a title" alt="Alt text" src="rpimg/sccater_sentiment.png">
       <figcaption style="text-align: center;"><em>Sentiment Polarity</em></figcaption>
@@ -119,7 +161,7 @@ Gồm 3 bộ dữ liệu
 - Ngược lại ở các mức sentiment >0: Hầu như các bài essay điểm càng thấp thì có sentiment càng cao.
 => Càng bài essay điểm càng cao có miền sentiment càng thấp.
 
-#### Phân tích độ đa dạng từ vựng
+**Phân tích độ đa dạng từ vựng**
 <figure>
       <img title="a title" alt="Alt text" src="rpimg/simple_ttr.svg">
       <figcaption style="text-align: center;"><em>Histogram chỉ số simple TTR </em></figcaption>
@@ -136,13 +178,13 @@ Gồm 3 bộ dữ liệu
 - Không có mối quan hệ tỉ lệ thuận giữa điểm số và độ đa dạng từ vựng .Trong trường hợp datasets này có thể có cách chấm điểm không dựa vào độ đa dạng từ hoặc có thể các bài có nhiều từ nhưng tác giả lại sử dụng sai ngữ cảnh dẫn đến điểm có thể sẽ không cao.
 - Tuy nhiên để đạt điểm cao (từ điểm 5 trở lên) thì hầu như các bài essay phải có chỉ số `Simple TTR` từ điểm 0.25 trở lên.
 
-## 2. Transformer
+## 2. Tìm hiểu về kiến trúc transformer
 Để một mô hình học máy có thể hiểu được ngôn ngữ của con người, từ đó xử lí các thông tin trên dữ liệu văn bản để đưa ra được dự đoán đúng nhất, thì **Transformer** chính là công cụ lí tưởng và tốt nhất cho hầu hết các tác vụ xử lí ngôn ngữ tự nhiên hiện nay, đây cũng chính là công cụ mà OpenAI đã sử dụng và tạo ra ChatGPT - một AI tạo sinh ngôn ngữ được hàng triệu người trên thế giới sử dụng. Sau đây chúng ta sẽ tìm hiểu sơ lược về khái niệm của mô hình Transformer như sau:
 
 ### 2.1 Định nghĩa
 Transformer là một kiến trúc mạng nơ-ron sâu, được giới thiệu lần đầu tiên trong bài báo "Attention is All You Need" của Vaswani và các cộng sự vào năm 2017. Nó đã trở thành một phương pháp chủ chốt trong lĩnh vực xử lý ngôn ngữ tự nhiên (NLP) và dịch máy tự động, cũng như nhiều ứng dụng khác trong học sâu.
 
-#### Kiến trúc cơ bản của Transformer
+**Kiến trúc cơ bản của Transformer**
 Transformer bao gồm hai thành phần chính: **Bộ mã hóa (Encoder)** và **Bộ giải mã (Decoder)**:
 
 **Bộ mã hóa (Encoder):** Encoder nhận dữ liệu đầu vào và xây dựng các đặc trưng (features) của nó. Có nghĩa là mô hình được tối ưu hóa để hiểu biết các thông tin từ đầu vào
@@ -286,14 +328,7 @@ Câu thứ hai: `NEGATIVE`: 0.9995, `POSITIVE`: 0.0005
 - **Tạo văn bản:** Việc tạo văn bản mạch lạc và phù hợp với ngữ cảnh có thể truy cập được thông qua quy trình tạo văn bản.
 - **Dịch thuật:** Việc dịch văn bản giữa các ngôn ngữ được thực hiện liền mạch bằng quy trình dịch thuật.
 - **Trả lời câu hỏi:** Việc trích xuất câu trả lời từ một văn bản nhất định cho một câu hỏi nhất định được thực hiện bằng quy trình trả lời câu hỏi.
-### 2.4 Tài liệu tham khảo:
-https://huggingface.co/learn/nlp-course/chapter1/3?fw=pt
 
-https://medium.com/@rakeshrajpurohit/exploring-hugging-face-transformer-pipelines-bd432220af0a
-
-https://www.d2l.ai/chapter_attention-mechanisms-and-transformers/transformer.html
-
-https://arxiv.org/pdf/1706.03762
 ## 3. Fine tuning mô hình DeBERTaV3
 ### 3.1. Giới thiệu mô hình 
 - Mục tiêu của bài toán là từ bài luận của học sinh, dự đoán điểm số từ 1 đến 6. Đây chính là một bài toán encoding điển hình. Các mô hình điển hình trong họ encoding như ALBERT, BERT, DistilBERT, ELECTRA, RoBERTa, ... Trong đó có một mô hình khá nổi trội được sử dụng bởi khá nhiều nhóm tham gia cuộc thi là DeBERTaV3.
@@ -396,7 +431,7 @@ def data_preprocessing(path, tokenizer, max_length):
 - `hidden_dropout_prob`: dropout ở lớp ẩn.
 - `attention_probs_dropout_prob`: dropout ở lớp attention.
 
-Lý do chọn `hidden_dropout_prob=0` và `attention_probs_dropout_prob=0`: Để tránh batch normalisation gây ra sự không ổn định trong dự đoán của mô hình. Dropout có thể làm giảm tính ổn định của batch normalisation đối với việc dự đoán giá trị liên tục.
+Lý do chọn `hidden_dropout_prob=0` và `attention_probs_dropout_prob=0` là để tránh batch normalisation gây ra sự không ổn định trong dự đoán của mô hình. Dropout có thể làm giảm tính ổn định của batch normalisation đối với việc dự đoán giá trị liên tục.
 
 **TrainingArguments**:
 - `learning_rate`: Hệ số học.
@@ -528,9 +563,21 @@ model = AutoModelForSequenceClassification. \
 ```
 - Đầu tiên ta điều chỉnh `num_labels=1` để mô hình chỉ dự đoán một giá trị điểm số duy nhất (ở đây là số thực)
 - Tiếp theo ta sẽ tắt dropout cho mô hình. Dropout là một kỹ thuật regularization được sử dụng để ngăn chặn overfitting trong mạng neural bằng cách ngẫu nhiên "dropout" một phần của các đơn vị (neurons) trong quá trình huấn luyện. Trong trường hợp này, khi sử dụng regression với NLP transformers, việc loại bỏ dropout là cần thiết để tránh batch normalization gây ra sự không ổn định trong dự đoán của mô hình. Điều này là do dropout có thể làm giảm tính ổn định của batch normalization đối với việc dự đoán giá trị liên tục.
+
+### 3.6. Đánh giá mô hình
+- Mô hình sẽ được đánh giá dựa trên `quadratic weighted kappa` như đã nói ở trên. Mô hình cuối cùng mất 8 giờ để chạy và cho ra 5 mô hình có số điểm như sau: 
+<img src="./rpimg/image.png" width="500">
+<img src="./rpimg/image copy.png" width="500">
+<img src="./rpimg/image copy 2.png" width="500">
+<img src="./rpimg/image copy 3.png" width="500">
+<img src="./rpimg/image copy 4.png" width="500">
+- Với kết quả cuối cùng là điểm trung bình của cross-validation của 5 mô hình là 0.83 và điểm trên leaderboard là 0.8
+<img src="./rpimg/image copy 5.png" width="700">
+- Quá trình thử nghiệm mô hình: 
+<img src="./rpimg/image copy 6.png" width="700">
 ## 4. Prompt Engineering với Meta-Llama-3-8B-Instruct
 ### 4.1. Giới thiệu mô hình
-- Mô hình này một mô hình ngôn ngữ lớn với khoảng 8 tỷ tham số. Mô hình thuốc họ Encoder-decoder models, được ra mắt vào ngày  18-04-2024 được sử dụng chủ yếu cho tác vụ Text Generation. 
+- Mô hình này một mô hình ngôn ngữ lớn với khoảng 8 tỷ tham số. Mô hình thuộc họ Encoder-decoder models, được ra mắt vào ngày 18-04-2024 được sử dụng chủ yếu cho tác vụ Text Generation. 
 - Mô hình sẽ được áp dùng vào bài toán bằng cách đưa bài luận và các hướng dẫn chấm điểm vào mô hình, sau đó yêu cầu mô hình sinh ra một đoạn văn bản chấm điểm cho bài luận đó. Bởi vì các mô hình ngôn ngữ lớn như Meta-Llama-3-8B-Instruct đã được huấn luyện trên một lượng lớn dữ liệu nên chúng có khả năng phần nào cảm nhận được gần đúng điểm số của bài luận nhưng vì không được huấn luyện trên tập dữ liệu này nên kết quả trả về sẽ sai lệch khá nhiều.
 ### 4.2. Các bước thực hiện
 
@@ -574,3 +621,24 @@ Messages được đưa vào pipeline, điểm được trích xuất và trả 
 **Lặp lại quá trình cho cả dataset**
 
 Với mỗi bài luận trong dataset, nhóm sẽ thực hiện các bước trên để sinh ra điểm số cho bài luận đó. Để thuận tiện, có thể dung method `map` của `pandas` để áp dụng hàm cho từng dòng trong dataset.
+
+<div style="page-break-after: always;"></div>
+
+## Tài liệu tham khảo:
+
+<a id="1" style="color: black;">[1]</a> HuggingFace NLP course.
+https://huggingface.co/learn/nlp-course/chapter1/3?fw=pt
+
+<a id="2" style="color: black;">[2]</a>  Transformer pinelines https://medium.com/@rakeshrajpurohit/exploring-hugging-face-transformer-pipelines-bd432220af0a
+
+<a id="3" style="color: black;">[3]</a> Attention mech https://www.d2l.ai/chapter_attention-mechanisms-and-transformers/transformer.html
+
+<a id="4" style="color: black;">[4]</a>  Evaluation metric https://www.kaggle.com/competitions/learning-agency-lab-automated-essay-scoring-2/overview/evaluation
+
+<a id="5" style="color: black;">[5]</a>  StratifiedKFold https://scikit-learn.org/stable/modules/cross_validation.html#stratified-k-fold
+
+<a id="6" style="color: black;">[6]</a>  Attention Is All You Need https://arxiv.org/pdf/1706.03762
+
+<a id="7" style="color: black;">[7]</a>  DeBERTa-v3-SMALL Starter https://www.kaggle.com/code/cdeotte/deberta-v3-small-starter-cv-0-820-lb-0-800#Create-Submission-CSV
+
+<a id="8" style="color: black;">[8]</a>  DeBERTa Starter Suggestions and Tips - LB 0.800+ https://www.kaggle.com/competitions/learning-agency-lab-automated-essay-scoring-2/discussion/497832
