@@ -36,12 +36,12 @@
 
 |MSSV|Họ tên|Các công việc|Đánh giá trên 100|
 |----|------|------------|-----------------|
-|21120504|Nguyễn Phương Nam|Fine-tuned điều chỉnh mô hình, viết và điều chỉnh báo cáo, tạo video|100|
-|21120576|Trần Đình Nhật Trí|Preprocessing, viết báo cáo, tạo video|100|
-|21120529|Nguyễn Gia Phúc|Thử nghiệm và đưa ra phiên bản fine-tuned model đầu tiên của nhóm. Viết báo cáo. Tạo mô hình LLAMA.|100|
-|21120516|Võ Bá Hoàng Nhất|EDA, tạo video, viết báo cáo.|100|
-|21120590|Nguyễn Thủy Uyên|EDA, tạo Slide, điều chỉnh báo cáo.|100|
 |21120501|Nguyễn Ngọc Gia Minh|Fine-tuning model, tạo Slide, điều chỉnh báo cáo.|100|
+|21120504|Nguyễn Phương Nam|Fine-tuned điều chỉnh mô hình, viết và điều chỉnh báo cáo, tạo video|100|
+|21120516|Võ Bá Hoàng Nhất|EDA, tạo video, viết báo cáo.|100|
+|21120529|Nguyễn Gia Phúc|Thử nghiệm và đưa ra phiên bản fine-tuned model đầu tiên của nhóm. Viết báo cáo. Prompt engineering với LLAMA.|100|
+|21120576|Trần Đình Nhật Trí|Preprocessing, viết báo cáo, tạo video|100|
+|21120590|Nguyễn Thủy Uyên|EDA, tạo Slide, điều chỉnh báo cáo.|100|
 
 
 <div style="page-break-after: always;"></div>
